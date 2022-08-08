@@ -1,0 +1,42 @@
+ 
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='login.css') }}">
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN"section crossorigin="anonymous"><link rel="stylesheet" href="./style.css">
+
+</head>
+<body>
+
+<!--Message Flash for sucessfull account creation.-->
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+	<ul>
+	{% for message in messages %}
+	  <li>{{ message }}</li>
+	{% endfor %}
+	</ul>
+  {% endif %}
+{% endwith %}
+
+
+<!-- partial:index.partial.html -->
+<div class="box-form">
+	<div class="left">
+		<div class="overlay">
+		<h1>The Catch</h1>
+		<p></p>
+		</div>
+	</div>
+        {% block content %}{% endblock content %}
+
+
+</div>
+<!-- partial -->
+
+</body>
+</html>
