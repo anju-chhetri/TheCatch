@@ -5,13 +5,14 @@ from wtforms.validators import InputRequired, Email, Length, ValidationError
 from flask_sqlalchemy  import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from Form.form import RegistrationForm, LoginForm
+from src.form import RegistrationForm, LoginForm
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 
 #For video stream:
 import cv2
-from Form.videoStream import VideoStream
+from src.videoStream import VideoStream
+from src.imageRecog import ImageRecog
 import os
 
 app = Flask(__name__)
@@ -56,7 +57,7 @@ def video():
         if request.form["submit_button"] == "Click":
             _, image = camera.read()
 
-            # To check if the directory exists or not----------->
+            #To check if the directory exists or not----------->
 
             forFolder = os.getcwd()
             newDirName = forFolder+'/ImageCaptured'
@@ -68,6 +69,15 @@ def video():
             #cv2.imwrite("/home/anju_chhetri/Desktop/TheCatch/ImageCaptured/person.jpeg", image)
             camera.release()
             cv2.destroyAllWindows()
+            detect = ImageRecog("/home/anju_chhetri/Desktop/DBMS/Project/flaskTest/CamImage/person.jpeg")
+            (name , conf) = detect.detection()
+            if conf==0:
+                print("Nothing detected in Image.")
+            else:
+                print(f"RESULT ------------------------> {name} conf: {conf}")
+
+
+
             return redirect(url_for("home"))
 
     return render_template('video.html')
@@ -98,6 +108,7 @@ def home():
         global IpLink
         IpLink = form.link.data
         return redirect(url_for('video'))
+
 
     return render_template("home.html", title = "home", form = form)
 
