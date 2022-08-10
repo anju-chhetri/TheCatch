@@ -9,6 +9,11 @@ from Form.form import RegistrationForm, LoginForm
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 
+#For video stream:
+import cv2
+from Form.videoStream import VideoStream
+import os
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'c91b01cf28e66396744495723edd414e9ba3277b'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///loginCredentials.db'
@@ -24,6 +29,83 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
+
+
+#-------------------------Video Stream
+
+def cam_frame():
+    global camera
+    camera = cv2.VideoCapture(0) #----------------->>
+    while True:
+        success, frame = camera.read()
+        if not success:
+            print("Device is not working properly.")
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+
+        yield(b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+
+
+@app.route("/video", methods = ["POST","GET"])
+def video():
+    if request.method == "POST":
+        if request.form["submit_button"] == "Click":
+            _, image = camera.read()
+
+            # To check if the directory exists or not----------->
+
+            forFolder = os.getcwd()
+            newDirName = forFolder+'/ImageCaptured'
+            if not (os.path.exists(newDirName)):
+                os.mkdir(newDirName)
+            #------------------------------->
+
+            cv2.imwrite(newDirName+"/person.jpeg", image)
+            #cv2.imwrite("/home/anju_chhetri/Desktop/TheCatch/ImageCaptured/person.jpeg", image)
+            camera.release()
+            cv2.destroyAllWindows()
+            return redirect(url_for("home"))
+
+    return render_template('video.html')
+
+
+@app.route("/videoFeed", methods = ["POST","GET"])
+def videoFeed():
+
+    return Response(cam_frame(),mimetype='multipart/x-mixed-replace; boundary=frame')
+
+#------------------------------------------>Home
+
+@app.route("/", methods = ['GET', 'POST'])
+@app.route("/home", methods = ['GET', 'POST'])
+def home():
+    ##For search by name---------------------->
+    #if request.method == "POST":
+        #if request.form.get("submitName"):
+            #name = request.form.get("search")
+            #print(f'nameeeeeeeeee------       {name}')
+            ##return redirect(url_for('login'))
+
+
+    #For search by Image
+
+    form = VideoStream()
+    if form.validate_on_submit():
+        global IpLink
+        IpLink = form.link.data
+        return redirect(url_for('video'))
+
+    return render_template("home.html", title = "home", form = form)
+
+
+
+
+
+
 #------------------------------------------>Login and Registration Part
 
 class User(UserMixin, db.Model):
@@ -35,17 +117,6 @@ class User(UserMixin, db.Model):
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
-
-
-@app.route("/", methods = ['GET', 'POST'])
-@app.route("/home", methods = ['GET', 'POST'])
-def home():
-    if request.method == "POST":
-        if request.form.get("submitName"):
-            name = request.form.get("search")
-            print(f'nameeeeeeeeee------       {name}')
-            #return redirect(url_for('login'))
-    return render_template("searchInput.html")
 
 
 @app.route("/login", methods = ['GET', 'POST'])
