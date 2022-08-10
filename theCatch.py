@@ -36,7 +36,18 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 @app.route("/", methods = ['GET', 'POST'])
+@app.route("/home", methods = ['GET', 'POST'])
+def home():
+    if request.method == "POST":
+        if request.form.get("submitName"):
+            name = request.form.get("search")
+            print(f'nameeeeeeeeee------       {name}')
+            #return redirect(url_for('login'))
+    return render_template("searchInput.html")
+
+
 @app.route("/login", methods = ['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -45,9 +56,9 @@ def login():
         if email:
             if check_password_hash(email.password, form.password.data):
                 login_user(email, remember=form.remember.data)
-                return '<h1> Sucess</h1>'
-
-        return '<h1>Invalid username or password</h1>'
+                #return '<h1> Sucess</h1>'#---------------put home page here
+                return redirect(url_for('home'))
+        return '<h1>Invalid username or password</h1>' # display flash message here
         #return '<h1>' + form.username.data + ' ' + form.password.data + '</h1>'
 
     return render_template('login.html', form=form)
