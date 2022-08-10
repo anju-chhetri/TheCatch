@@ -1,10 +1,11 @@
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='registration.css') }}">
 <!DOCTYPE html>
 <html>
 
 
   <body>
     <h1>Live streaming</h1>
-    <div>
+    <div class = "frames">
         <img src="{{ url_for('videoFeed') }}" width="50%"/>
     </div>
 
@@ -13,4 +14,10 @@
   <form action = 'video' method = "post">
    <input type ="submit" name = "submit_button" value = "Click">
   </form>
+  <style>
+  .frames{
+		text-align:center;
+  		width:100%;
+  }
+</style>
 </html>
