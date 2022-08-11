@@ -1,0 +1,63 @@
+ <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='informationDisplay.css') }}">
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Records: </title>
+   </head>
+   <body style="background-color:grey;">
+    {%if error%}
+       <h4> {{error}} </h4>
+
+   {%endif%}
+
+{%if criminalNameList%}
+
+<div class="container">
+   <h1>{{criminalNameList[0].name}}</h1>
+   <h3>Personal Profile</h3>
+  <!-- Image***********>-->
+     <div class="listFlex">
+      <div>
+         <ul>
+            <li>Criminal ID: {{criminalNameList[0].id}}</li>
+            <li>Address: {{criminalNameList[0].address}}</li>
+            <li>Age: {{criminalNameList[0].age}}</li>
+         </ul>
+      </div>
+    </div>
+{%endif%}
+</div>
+<form method = "post">
+  <button type="submit" name = "Return" value = "Return">Return</button>
+</form>
+
+   </body>
+</html>
+
+
+<!--<div class="container">
+   <h1>Dan Englishby</h1>
+   <h3>Personal Profile</h3>
+   <a href="https://imgbb.com/"><img src="https://i.ibb.co/pdJfzx9/profile-picture.jpg" alt="profile-picture" border="0" /></a>
+   <h4>About Me</h4>
+   <p>Hi, I'm Dan Englishby, I have a huge passion for web-development and programming. I love to learn and thrive from challenges.</p>
+   <h4>My Skills</h4>
+   <div class="listFlex">
+      <div>
+         <ul>
+            <li>PHP</li>
+            <li>HTML</li>
+            <li>CSS</li>
+         </ul>
+      </div>
+      <div>
+         <ul>
+            <li>JavaScript</li>
+            <li>JQuery</li>
+            <li>C#</li>
+         </ul>
+      </div>
+   </div>
+   <h4>Social Media</h4>
+   Catch me on Twitter - <a href="https://twitter.com/DanEnglishby">@DanEnglishby</a>
+</div>-->

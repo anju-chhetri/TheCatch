@@ -18,6 +18,7 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'c91b01cf28e66396744495723edd414e9ba3277b'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///loginCredentials.db'
+app.config['SQLALCHEMY_BINDS'] = { 'CriminalBaseSample':'sqlite:///CriminalBaseSample.db'}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
@@ -30,81 +31,78 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
+#---------------------------------____Criminal DATABASE
+
+class Criminal(db.Model):
+    __bind_key__ = 'CriminalBaseSample'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable = False)
+    address = db.Column(db.String(80), nullable = False)
+    age=db.Column(db.Integer(), nullable = False)
+    crimes = db.relationship("Crime", backref="criminal")
 
 
-#-------------------------Video Stream
+    def __init__(self, name, address, age):
+        self.name = name
+        self.address = address
+        self.age = age
 
-def cam_frame():
-    global camera
-    camera = cv2.VideoCapture(0) #----------------->>
-    while True:
-        success, frame = camera.read()
-        if not success:
-            print("Device is not working properly.")
-            break
-        else:
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
+    def __repr__(self):
+        return f"<Criminal {self.name}>"
 
-        yield(b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+#a criminal can have multiple crimes
+class Crime(db.Model):
+    __bind_key__ = 'CriminalBaseSample'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    crime_location = db.Column(db.String)
+    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
+    def __init__(self, name , crime_location, criminal):
+        date_of_crime = datetime.date.today()
+        self.name = name
+        self.crime_location = crime_location
+        self.criminal = criminal
+    def __repr__(self):
+        return f"<Crime {self.name}>"
 
-
-
-
-@app.route("/video", methods = ["POST","GET"])
-def video():
-    if request.method == "POST":
-        if request.form["submit_button"] == "Click":
-            _, image = camera.read()
-
-            #To check if the directory exists or not----------->
-
-            forFolder = os.getcwd()
-            newDirName = forFolder+'/ImageCaptured'
-            if not (os.path.exists(newDirName)):
-                os.mkdir(newDirName)
-            #------------------------------->
-
-            cv2.imwrite(newDirName+"/person.jpeg", image)
-            #cv2.imwrite("/home/anju_chhetri/Desktop/TheCatch/ImageCaptured/person.jpeg", image)
-            camera.release()
-            cv2.destroyAllWindows()
-            detect = ImageRecog("/home/anju_chhetri/Desktop/DBMS/Project/flaskTest/CamImage/person.jpeg")
-            (name , conf) = detect.detection()
-            if conf==0:
-                print("Nothing detected in Image.")
-            else:
-                print(f"RESULT ------------------------> {name} conf: {conf}")
-
-
-
-            return redirect(url_for("home"))
-
-    return render_template('video.html')
-
-
-@app.route("/videoFeed", methods = ["POST","GET"])
-def videoFeed():
-
-    return Response(cam_frame(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 #------------------------------------------>Home
+@app.route("/informationDisplay", methods = ['GET', 'POST'])
+def informationDisplay():
+    nameSubmitted = request.args.get('name')
+    criminalNameList = Criminal.query.filter_by(name = nameSubmitted).all()
+    if request.method == 'POST':
+        if request.form.get("Return"):
+            return redirect(url_for('home'))
+
+    if len(criminalNameList)==0:
+        error = "Criminal record does not exist."
+        return render_template("informationDisplay.html", error = error)
+    else:
+        return render_template("informationDisplay.html", criminalNameList = criminalNameList)
+
+    return render_template("informationDisplay.html")
+
 
 @app.route("/", methods = ['GET', 'POST'])
 @app.route("/home", methods = ['GET', 'POST'])
+#@login_required
 def home():
     ##For search by name---------------------->
-    #if request.method == "POST":
-        #if request.form.get("submitName"):
-            #name = request.form.get("search")
-            #print(f'nameeeeeeeeee------       {name}')
-            ##return redirect(url_for('login'))
+    if request.method == "POST":
+        if request.form.get("submitName"):
+            nameSubmitted = request.form.get("search")
+            return redirect(url_for("informationDisplay", name = nameSubmitted))
+                #print(f'name: {criminalNameList[0].name} \n address: {criminalNameList[0].address}')
+
 
 
     #For search by Image
 
     form = VideoStream()
     if form.validate_on_submit():
+        print("----------------------->In")
         global IpLink
         IpLink = form.link.data
         return redirect(url_for('video'))
@@ -145,7 +143,6 @@ def login():
 
     return render_template('login.html', form=form)
 
-#@login_required
 @app.route("/register", methods = ['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -158,6 +155,62 @@ def register():
         #return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data + '</h1>'
         return redirect(url_for('login'))
     return render_template('registration.html', form=form)
+
+
+
+#-------------------------Video Stream
+
+def cam_frame():
+    global camera
+    camera = cv2.VideoCapture(0) #----------------->>
+    while True:
+        success, frame = camera.read()
+        if not success:
+            print("Device is not working properly.")
+            break
+        else:
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+
+        yield(b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+
+@app.route("/video", methods = ["POST","GET"])
+def video():
+    if request.method == "POST":
+        if request.form["submit_button"] == "Click":
+            _, image = camera.read()
+
+            #To check if the directory exists or not----------->
+
+            forFolder = os.getcwd()
+            newDirName = forFolder+'/ImageCaptured'
+            if not (os.path.exists(newDirName)):
+                os.mkdir(newDirName)
+            #------------------------------->
+            cv2.imwrite(newDirName+"/person.jpeg", image)
+            #cv2.imwrite("/home/anju_chhetri/Desktop/TheCatch/ImageCaptured/person.jpeg", image)
+            camera.release()
+            cv2.destroyAllWindows()
+            detect = ImageRecog(newDirName+"/person.jpeg")
+            (name , conf) = detect.detection()
+            if conf==0:
+                print("Nothing detected in Image.")
+            else:
+                print(f"RESULT ------------------------> {name} conf: {conf}")
+
+
+
+            return redirect(url_for("home"))
+
+    return render_template('video.html')
+
+@app.route("/videoFeed", methods = ["POST","GET"])
+def videoFeed():
+
+    return Response(cam_frame(),mimetype='multipart/x-mixed-replace; boundary=frame')
+
 
 
 if __name__ == "__main__":
