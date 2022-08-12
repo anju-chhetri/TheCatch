@@ -18,7 +18,7 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'c91b01cf28e66396744495723edd414e9ba3277b'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///loginCredentials.db'
-app.config['SQLALCHEMY_BINDS'] = { 'CriminalBaseSample':'sqlite:///CriminalBaseSample.db'}
+app.config['SQLALCHEMY_BINDS'] = { 'CriminalDataBase':'sqlite:///CriminalDataBase.db'}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
@@ -31,43 +31,9 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 
-#---------------------------------____Criminal DATABASE
-
-class Criminal(db.Model):
-    __bind_key__ = 'CriminalBaseSample'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable = False)
-    address = db.Column(db.String(80), nullable = False)
-    age=db.Column(db.Integer(), nullable = False)
-    crimes = db.relationship("Crime", backref="criminal")
-
-
-    def __init__(self, name, address, age):
-        self.name = name
-        self.address = address
-        self.age = age
-
-    def __repr__(self):
-        return f"<Criminal {self.name}>"
-
-#a criminal can have multiple crimes
-class Crime(db.Model):
-    __bind_key__ = 'CriminalBaseSample'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    crime_location = db.Column(db.String)
-    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
-    def __init__(self, name , crime_location, criminal):
-        date_of_crime = datetime.date.today()
-        self.name = name
-        self.crime_location = crime_location
-        self.criminal = criminal
-    def __repr__(self):
-        return f"<Crime {self.name}>"
-
 
 #------------------------------------------>Home
+
 @app.route("/informationDisplay", methods = ['GET', 'POST'])
 def informationDisplay():
     nameSubmitted = request.args.get('name')
@@ -76,19 +42,31 @@ def informationDisplay():
         if request.form.get("Return"):
             return redirect(url_for('home'))
 
+    additionalInformation = request.args.get('additionalInformation')
+
     if len(criminalNameList)==0:
         error = "Criminal record does not exist."
         return render_template("informationDisplay.html", error = error)
+
+    elif additionalInformation == "victim":
+        return render_template("informationDisplay.html", victim = criminalNameList )
+
+    elif additionalInformation == "judge":
+        return render_template("informationDisplay.html", judge = criminalNameList )
+
+    elif additionalInformation == "crime":
+        return render_template("informationDisplay.html", crime = criminalNameList )
+
     else:
         return render_template("informationDisplay.html", criminalNameList = criminalNameList)
 
     return render_template("informationDisplay.html")
 
-
 @app.route("/", methods = ['GET', 'POST'])
 @app.route("/home", methods = ['GET', 'POST'])
 #@login_required
 def home():
+
     ##For search by name---------------------->
     if request.method == "POST":
         if request.form.get("submitName"):
@@ -109,7 +87,8 @@ def home():
 
 
     return render_template("home.html", title = "home", form = form)
-
+    a = Criminal.query.all()
+    print(a[0].victim[0].name)
 
 
 
@@ -210,6 +189,90 @@ def video():
 def videoFeed():
 
     return Response(cam_frame(),mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+
+#---------------------------------____Criminal DATABASE
+
+class Criminal(db.Model):
+   # __tablename__ = 'criminals'
+    __bind_key__ = 'CriminalDataBase'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable = False)
+    address = db.Column(db.String(80), nullable = False)
+    age = db.Column(db.Integer(), nullable = False)
+    nationality = db.Column(db.String(80), nullable = False)
+    years = db.Column(db.String(80), nullable = False)
+
+    crimes = db.relationship("Crime", backref="criminal")
+    victim = db.relationship("Victim", backref="criminal")
+    judge= db.relationship("Judge", backref = "criminal")
+
+    def __init__(self, name, address, age, nationality, years):
+        self.name = name
+        self.address = address
+        self.age = age
+        self.nationality = nationality
+        self.years = years
+    def __repr__(self):
+        return f"<Criminal {self.name}>"
+
+class Crime(db.Model):
+    __bind_key__ = 'CriminalDataBase'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    #date_of_crime = db.Column(db.Date)
+    crime_location = db.Column(db.String)
+    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
+
+    def __init__(self, name , crime_location, criminal):
+        self.name = name
+        self.crime_location = crime_location
+        self.criminal = criminal
+
+    def __repr__(self):
+        return f"<Crime {self.name}>"
+
+class Victim(db.Model):
+    __bind_key__ = 'CriminalDataBase'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable = False)
+    address = db.Column(db.String(80), nullable = False)
+    age = db.Column(db.Integer(), nullable = False)
+    nationality = db.Column(db.String(80), nullable = True)
+    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
+
+    def __init__(self, name, address, age, nationality, criminal ):
+        self.name = name
+        self.address = address
+        self.age = age
+        self.nationality = nationality
+        self.criminal = criminal
+
+    def __repr__(self):
+        return f"<Victim {self.name}>"
+
+class Judge(db.Model):
+    __bind_key__ = 'CriminalDataBase'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable = False)
+    address = db.Column(db.String(80), nullable = False)
+    country = db.Column(db.String(80), nullable = False)
+    age = db.Column(db.Integer(), nullable = False)
+    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
+
+    def __init__(self, name, address, age, country, criminal):
+        self.name = name
+        self.address = address
+        self.age = age
+        self.country = country
+        self.criminal = criminal
+
+    def __repr__(self):
+        return f"<Judge {self.name}>"
 
 
 

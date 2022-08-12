@@ -5,10 +5,15 @@
       <title>Records: </title>
    </head>
    <body style="background-color:grey;">
+
+<!--   ************************For Errors:-->
     {%if error%}
-       <h4> {{error}} </h4>
+       <h2> {{error}} </h2>
 
    {%endif%}
+
+
+<!--   ************************Personal Profile:-->
 
 {%if criminalNameList%}
 
@@ -25,8 +30,128 @@
          </ul>
       </div>
     </div>
-{%endif%}
+
+
+
+   <div class="dropdown">
+  <button class="dropbtn">Additional Information</button>
+  <div class="dropdown-content">
+    <a href="{{url_for('informationDisplay', additionalInformation = 'crime', name = criminalNameList[0].name)}}">Crime</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'victim', name = criminalNameList[0].name)}}">Victim</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'judge', name = criminalNameList[0].name)}}">Judge</a>
+  </div>
 </div>
+
+    {%endif%}
+
+<!--   ******************************************For crime:-->
+
+{%if crime%}
+
+<div class="container">
+   <h1>{{crime[0].name}}</h1>
+
+   {% for crime in crime[0].crimes%}
+           <div class="listFlex">
+      <div>
+         <ul>
+            <li>Crime ID: {{crime.id}}</li>
+            <li>Crime Name: {{crime.name}}</li>
+
+            <li>Crime Location: {{crime.crime_location}}</li>
+         </ul>
+      </div>
+    </div>
+
+      {%endfor%}
+
+
+          <div class="dropdown">
+  <button class="dropbtn">Additional Information</button>
+  <div class="dropdown-content">
+     <a href="{{url_for('informationDisplay', name = crime[0].name)}}">Criminal</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'crime', name = crime[0].name)}}">Crime</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'victim', name = crime[0].name)}}">Victim</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'judge', name = crime[0].name)}}">Judge</a>
+  </div>
+</div>
+
+
+{%endif%}
+
+
+<!--   ******************************************For Victim:-->
+{% if victim %}
+<div class="container">
+
+   {% for victims in victim[0].victim%}
+      <h1>{{victims.name}}</h1>
+           <div class="listFlex">
+      <div>
+         <ul>
+            <li>ID: {{victims.id}}</li>
+            <li>Name: {{victims.name}}</li>
+            <li>Age: {{victims.age}}</li>
+            <li>Address: {{victims.address}}</li>
+            <li>Nationality: {{victims.nationality}}</li>
+
+         </ul>
+      </div>
+    </div>
+
+      {%endfor%}
+
+          <div class="dropdown">
+  <button class="dropbtn">Additional Information</button>
+  <div class="dropdown-content">
+     <a href="{{url_for('informationDisplay', name = victim[0].name)}}">Criminal</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'crime', name = victim[0].name)}}">Crime</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'victim', name = victim[0].name)}}">Victim</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'judge', name = victim[0].name)}}">Judge</a>
+  </div>
+</div>
+
+
+{%endif%}
+
+
+
+<!--   ******************************************For Judge:-->
+{% if judge %}
+<div class="container">
+
+   {% for judges in judge[0].judge%}
+      <h1>{{judges.name}}</h1>
+           <div class="listFlex">
+      <div>
+         <ul>
+            <li>ID: {{judges.id}}</li>
+            <li>Name: {{judges.name}}</li>
+            <li>Age: {{judges.age}}</li>
+            <li>Address: {{judges.address}}</li>
+            <li>Country of Judgement: {{judges.country}}</li>
+
+         </ul>
+      </div>
+    </div>
+
+      {%endfor%}
+
+          <div class="dropdown">
+  <button class="dropbtn">Additional Information</button>
+  <div class="dropdown-content">
+   <a href="{{url_for('informationDisplay', name = judge[0].name)}}">Criminal</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'crime', name = judge[0].name)}}">Crime</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'victim', name = judge[0].name)}}">Victim</a>
+    <a href="{{url_for('informationDisplay', additionalInformation = 'judge', name = judge[0].name)}}">Judge</a>
+  </div>
+</div>
+
+{%endif%}
+
+</div>
+
+
 <form method = "post">
   <button type="submit" name = "Return" value = "Return">Return</button>
 </form>
