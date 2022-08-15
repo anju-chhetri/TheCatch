@@ -4,10 +4,8 @@ from wtforms import StringField, PasswordField, BooleanField
 from wtforms.validators import InputRequired, Email, Length, ValidationError
 from flask_sqlalchemy  import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from src.form import RegistrationForm, LoginForm
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-
+from sqlalchemy.exc import IntegrityError
 
 #For video stream:
 import cv2
@@ -23,16 +21,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 db = SQLAlchemy(app)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-#-----------Login information
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
-
+##-----------Login information
+#login_manager = LoginManager()
+#login_manager.init_app(app)
+#login_manager.login_view = 'login'
 
 
-#------------------------------------------>Home
+
+#------------------------------------------>Criminal Information display
 
 @app.route("/informationDisplay", methods = ['GET', 'POST'])
 def informationDisplay():
@@ -62,9 +59,10 @@ def informationDisplay():
 
     return render_template("informationDisplay.html")
 
+
+#-------------------------------------------------------------------------------->Home
 @app.route("/", methods = ['GET', 'POST'])
 @app.route("/home", methods = ['GET', 'POST'])
-#@login_required
 def home():
 
     ##For search by name---------------------->
@@ -72,9 +70,9 @@ def home():
         if request.form.get("submitName"):
             nameSubmitted = request.form.get("search")
             return redirect(url_for("informationDisplay", name = nameSubmitted))
-                #print(f'name: {criminalNameList[0].name} \n address: {criminalNameList[0].address}')
 
-
+        if request.form.get("Logout"):
+            return(redirect(url_for("login")))
 
     #For search by Image
 
@@ -83,42 +81,44 @@ def home():
         print("----------------------->In")
         global IpLink
         IpLink = form.link.data
+        print(IpLink)
+        print(IpLink)
         return redirect(url_for('video'))
 
 
     return render_template("home.html", title = "home", form = form)
-    a = Criminal.query.all()
-    print(a[0].victim[0].name)
 
 
 
 
 
-#------------------------------------------>Login and Registration Part
 
-class User(UserMixin, db.Model):
+#--------------------------------------------------------------->Login and Registration Part
+
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), unique=True)
     email = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(80))
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-
+#@login_manager.user_loader
+#def load_user(user_id):
+    #return User.query.get(int(user_id))
 @app.route("/login", methods = ['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        email = User.query.filter_by(email=form.email.data).first()
-        if email:
-            if check_password_hash(email.password, form.password.data):
-                login_user(email, remember=form.remember.data)
-                #return '<h1> Sucess</h1>'#---------------put home page here
-                return redirect(url_for('home'))
-        return '<h1>Invalid username or password</h1>' # display flash message here
-        #return '<h1>' + form.username.data + ' ' + form.password.data + '</h1>'
+            email = User.query.filter_by(email=form.email.data).first()
+            if email:
+                if check_password_hash(email.password, form.password.data):
+
+                    return redirect(url_for('home'))
+                else:
+                    flash("Password error.")
+            else:
+                flash("No matching email found.")
+
+            # display flash message here
 
     return render_template('login.html', form=form)
 
@@ -126,13 +126,17 @@ def login():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        hashed_password = generate_password_hash(form.password.data, method='sha256')
-        new_user = User(username=form.username.data, email=form.email.data, password=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
+        try:
+            hashed_password = generate_password_hash(form.password.data, method='sha256')
+            new_user = User(username=form.username.data, email=form.email.data, password=hashed_password)
+            db.session.add(new_user)
+            db.session.commit()
+            return redirect(url_for('login'))
 
+        except IntegrityError:
+            flash("User with this email address already exists.")
+            db.session.rollback()
         #return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data + '</h1>'
-        return redirect(url_for('login'))
     return render_template('registration.html', form=form)
 
 
@@ -141,11 +145,15 @@ def register():
 
 def cam_frame():
     global camera
-    camera = cv2.VideoCapture(0) #----------------->>
+    if IpLink == '0':#-------------------------------------------------------->here work need to done
+        camera = cv2.VideoCapture(0)
+    else:
+        camera = cv2.VideoCapture(IpLink) #----------------->>
     while True:
         success, frame = camera.read()
+        if IpLink!='0':
+            frame=cv2.transpose(frame)
         if not success:
-            print("Device is not working properly.")
             break
         else:
             ret, buffer = cv2.imencode('.jpg', frame)
@@ -155,7 +163,7 @@ def cam_frame():
 
 
 
-@app.route("/video", methods = ["POST","GET"])
+@app.route("/video", methods = ['POST','GET'])
 def video():
     if request.method == "POST":
         if request.form["submit_button"] == "Click":
@@ -174,18 +182,17 @@ def video():
             cv2.destroyAllWindows()
             detect = ImageRecog(newDirName+"/person.jpeg")
             (name , conf) = detect.detection()
+            if name == "dog":   #------------------------------------------------------------------------>Need to change
+                return redirect(url_for("informationDisplay", name = 'Hella'))
             if conf==0:
                 print("Nothing detected in Image.")
             else:
                 print(f"RESULT ------------------------> {name} conf: {conf}")
-
-
-
             return redirect(url_for("home"))
 
     return render_template('video.html')
 
-@app.route("/videoFeed", methods = ["POST","GET"])
+@app.route("/videoFeed", methods = ['POST','GET'])
 def videoFeed():
 
     return Response(cam_frame(),mimetype='multipart/x-mixed-replace; boundary=frame')

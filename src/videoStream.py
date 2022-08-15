@@ -5,5 +5,5 @@ from wtforms.validators import DataRequired, Length
 
 class VideoStream(FlaskForm):
     link = StringField('',
-                           validators=[Length(min=2, max=50)], render_kw={"placeholder": "link"})
+                           validators=[Length(min=1, max=50)], render_kw={"placeholder": "link"})
     submit = SubmitField('Enter')
