@@ -14,11 +14,16 @@
   <form action = 'video' method = "post">
    <input type ="submit" name = "submit_button" value = "Click">
   </form>
+
+  <form class = "return" method = "post">
+  <button type="submit" name = "Return" value = "Return">Return</button>
+</form>
   <style>
   .frames{
 		text-align:center;
   		width:100%;
   }
+
 
   {% with messages = get_flashed_messages(with_categories=true) %}
   {% if messages %}
@@ -29,8 +34,6 @@
     </ul>
   {% endif %}
 {% endwith %}
-<form method = "post">
-  <button type="submit" name = "Return" value = "Return">Return</button>
-</form>
+
 </style>
 </html>

@@ -8,7 +8,7 @@ class ImageRecog():
         self.imgPath = imagepath
 
     def detection(self):
-        weight = "/home/anju_chhetri/Desktop/TheCatch/best.pt"
+        weight = "/home/anju_chhetri/Desktop/TheCatch/CriminalRecog.pt"
         model = torch.hub.load("/home/anju_chhetri/Desktop/DBMS/Project/yolov5/", "custom",path = weight,  force_reload = True, source = "local")
         img = cv2.imread(self.imgPath)
         img = cv2.resize(img, (416, 416))

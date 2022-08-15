@@ -1,0 +1,34 @@
+ <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='informationDisplay.css') }}">
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Records: </title>
+   </head>
+   <body style="background-color:grey;">
+
+
+<!--   ************************Personal Profile:-->
+
+{%if criminalNameList%}
+
+<div class="container">
+   <h1>{{criminalNameList[0].name}}</h1>
+   <h3>Personal Profile</h3>
+    <img src={{criminalNameList[1].fileLocation}} alt="Trulli" width="500" height="333"/>
+     <div class="listFlex">
+      <div>
+         <ul>
+            <li>Criminal ID: {{criminalNameList[1].id}}</li>
+            <li>Address: {{criminalNameList[1].name}}</li>
+         </ul>
+      </div>
+    </div>
+
+</body>
+    {%endif%}
+
+
+
+   </body>
+</html>
+

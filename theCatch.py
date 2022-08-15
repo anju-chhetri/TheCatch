@@ -13,6 +13,13 @@ from src.videoStream import VideoStream
 from src.imageRecog import ImageRecog
 import os
 
+
+#For User login
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_bootstrap import Bootstrap
+
+
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'c91b01cf28e66396744495723edd414e9ba3277b'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///loginCredentials.db'
@@ -23,15 +30,20 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 ##-----------Login information
-#login_manager = LoginManager()
-#login_manager.init_app(app)
-#login_manager.login_view = 'login'
+bootstrap = Bootstrap(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 #------------------------------------------>Criminal Information display
 
 @app.route("/informationDisplay", methods = ['GET', 'POST'])
+@login_required
 def informationDisplay():
     nameSubmitted = request.args.get('name')
     criminalNameList = Criminal.query.filter_by(name = nameSubmitted).all()
@@ -62,6 +74,7 @@ def informationDisplay():
 
 #-------------------------------------------------------------------------------->Home
 @app.route("/home", methods = ['GET', 'POST'])
+@login_required
 def home():
 
     ##For search by name---------------------->
@@ -71,13 +84,12 @@ def home():
             return redirect(url_for("informationDisplay", name = nameSubmitted))
 
         if request.form.get("Logout"):
-            return(redirect(url_for("login")))
+            return(redirect(url_for("logout")))
 
     #For search by Image
 
     form = VideoStream()
     if form.validate_on_submit():
-        print("----------------------->In")
         global IpLink
         IpLink = form.link.data
         print(IpLink)
@@ -94,7 +106,7 @@ def home():
 
 #--------------------------------------------------------------->Login and Registration Part
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), unique=True)
     email = db.Column(db.String(50), unique=True)
@@ -111,7 +123,7 @@ def login():
             email = User.query.filter_by(email=form.email.data).first()
             if email:
                 if check_password_hash(email.password, form.password.data):
-
+                    login_user(email, remember=form.remember.data)
                     return redirect(url_for('home'))
                 else:
                     flash("Password error.")
@@ -145,7 +157,7 @@ def register():
 
 def cam_frame():
     global camera
-    if IpLink == '0':#-------------------------------------------------------->here work need to done
+    if IpLink == '0':#-------------------------------------------------------->here work needs to done
         camera = cv2.VideoCapture(0)
     else:
         camera = cv2.VideoCapture(IpLink) #----------------->>
@@ -164,9 +176,15 @@ def cam_frame():
 
 
 @app.route("/video", methods = ['POST','GET'])
+@login_required
 def video():
     if request.method == "POST":
-        if request.form["submit_button"] == "Click":
+        if request.form.get("Return"):
+            camera.release()
+            cv2.destroyAllWindows()
+            return redirect(url_for('home'))
+
+        elif request.form["submit_button"] == "Click":
             _, image = camera.read()
 
             #To check if the directory exists or not----------->
@@ -182,28 +200,32 @@ def video():
             cv2.destroyAllWindows()
             detect = ImageRecog(newDirName+"/person.jpeg")
             (nameCriminal , conf) = detect.detection()
-            #if name == "dog":   #------------------------------------------------------------------------>Need to change
-                #return redirect(url_for("informationDisplay", name = 'Hella'))
+
+            if nameCriminal == "Kailash Pantha":
+                return(redirect(url_for("informationDisplay", name = "Hella"))) #------------------------------------------------------------------------>Need to change
+
             if conf==0:
                 print("Nothing detected in Image.")
                 return(redirect(url_for("informationDisplay", name = nameCriminal)))
             else:
-                print(f"RESULT ------------------------> {name} conf: {conf}")
+                print(f"RESULT ------------------------> {nameCriminal} conf: {conf}")
             return redirect(url_for("home"))
 
-        else:
-            if request.form.get("Return"):
-                camera.release()
-                cv2.destroyAllWindows()
-                return redirect(url_for('home'))
     return render_template('video.html')
+
+
 
 @app.route("/videoFeed", methods = ['POST','GET'])
 def videoFeed():
-
     return Response(cam_frame(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
+#------------------------------------------> Logout Part
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 #---------------------------------____Criminal DATABASE
 
