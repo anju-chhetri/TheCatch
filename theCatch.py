@@ -61,7 +61,6 @@ def informationDisplay():
 
 
 #-------------------------------------------------------------------------------->Home
-@app.route("/", methods = ['GET', 'POST'])
 @app.route("/home", methods = ['GET', 'POST'])
 def home():
 
@@ -104,6 +103,7 @@ class User(db.Model):
 #@login_manager.user_loader
 #def load_user(user_id):
     #return User.query.get(int(user_id))
+@app.route("/", methods = ['GET', 'POST'])
 @app.route("/login", methods = ['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -181,15 +181,21 @@ def video():
             camera.release()
             cv2.destroyAllWindows()
             detect = ImageRecog(newDirName+"/person.jpeg")
-            (name , conf) = detect.detection()
-            if name == "dog":   #------------------------------------------------------------------------>Need to change
-                return redirect(url_for("informationDisplay", name = 'Hella'))
+            (nameCriminal , conf) = detect.detection()
+            #if name == "dog":   #------------------------------------------------------------------------>Need to change
+                #return redirect(url_for("informationDisplay", name = 'Hella'))
             if conf==0:
                 print("Nothing detected in Image.")
+                return(redirect(url_for("informationDisplay", name = nameCriminal)))
             else:
                 print(f"RESULT ------------------------> {name} conf: {conf}")
             return redirect(url_for("home"))
 
+        else:
+            if request.form.get("Return"):
+                camera.release()
+                cv2.destroyAllWindows()
+                return redirect(url_for('home'))
     return render_template('video.html')
 
 @app.route("/videoFeed", methods = ['POST','GET'])
