@@ -129,6 +129,14 @@ class Judge(db.Model):
     def __repr__(self):
         return f"<Judge {self.name}>"
 
+#------------------------------------------>Display All Record
+
+@app.route("/allrecord", methods = ['GET', 'POST'])
+def allrecord():
+    if request.method == "POST":
+        if request.form.get("Return"):
+            return redirect(url_for("home"))
+    return render_template("allrecord.html", criminalNameList = Criminal.query.all())
 
 #------------------------------------------>Criminal Information display
 

@@ -1,0 +1,68 @@
+ <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='registration.css') }}">
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Records: </title>
+   </head>
+
+
+<style>
+div.container {
+  text-align: center;
+}
+
+ol.list {
+  display: inline-block;
+  text-align: left;
+  font-size: 20px;
+}
+h1 {
+  font-size: 70px;
+}
+
+</style>
+
+   <body style="background-color:grey;">
+
+<!--   ************************For Errors:-->
+    {%if error%}
+       <h2> {{error}} </h2>
+
+   {%endif%}
+
+
+
+
+{%if criminalNameList%}
+
+<div class="container">
+<h1> List of all criminals:</h1>
+<!-- Image***********>-->
+
+     <div class="listFlex">
+      <div>
+         <ol class = "list">
+   {% for crime in criminalNameList%}
+
+            <li> {{crime.name}}</li>
+            {%endfor%}
+
+            </ol>
+      </div>
+    </div>
+</div>
+
+    {%endif%}
+
+
+
+
+
+<form method = "post">
+  <button type="submit" name = "Return" value = "Return">Return</button>
+</form>
+
+   </body>
+</html>
+
+
