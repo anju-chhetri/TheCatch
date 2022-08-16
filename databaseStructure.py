@@ -14,9 +14,10 @@ class Criminal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable = False)
     address = db.Column(db.String(80), nullable = False)
-    age = db.Column(db.Integer(), nullable = False)
+    age = db.Column(db.Integer, nullable = False)
     nationality = db.Column(db.String(80), nullable = False)
-    years = db.Column(db.String(80), nullable = False)
+    years = db.Column(db.Integer, nullable = False)
+    jail = db.Column(db.String(80), nullable = False)
     fileLocation = db.Column(db.String(80), nullable = False) #-----------------_For Image
     created_at = db.Column(db.DateTime(timezone=True), server_default=func.now()) #-------------------_Added
 
@@ -24,21 +25,22 @@ class Criminal(db.Model):
     victim = db.relationship("Victim", backref="criminal")
     judge= db.relationship("Judge", backref = "criminal")
 
-    def __init__(self, name, address, age, nationality, years):
+    def __init__(self, name, address, age, nationality, years, jail, fileLocation):
         self.name = name
         self.address = address
         self.age = age
         self.nationality = nationality
         self.years = years
+        self.jail = jail
+        self.fileLocation = fileLocation
     def __repr__(self):
         return f"<Criminal {self.name}>"
 
 class Crime(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    #date_of_crime = db.Column(db.Date)
-    crime_location = db.Column(db.String)
+    name = db.Column(db.String(80))
+    crime_location = db.Column(db.String(80))
     criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
 
     def __init__(self, name , crime_location, criminal):
@@ -54,7 +56,7 @@ class Victim(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable = False)
     address = db.Column(db.String(80), nullable = False)
-    age = db.Column(db.Integer(), nullable = False)
+    age = db.Column(db.Integer, nullable = False)
     nationality = db.Column(db.String(80), nullable = True)
     criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
 
@@ -71,16 +73,16 @@ class Victim(db.Model):
 class Judge(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), nullable = False)
-    address = db.Column(db.String(80), nullable = False)
-    country = db.Column(db.String(80), nullable = False)
-    age = db.Column(db.Integer(), nullable = False)
+    courtName = db.Column(db.String(80), nullable = False)
+    courtLocation = db.Column(db.String(80), nullable = True)
+    casesFought = db.Column(db.Integer, nullable = True)
     criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
 
-    def __init__(self, name, address, age, country, criminal):
+    def __init__(self, name, courtName, courtLocation , casesFought, criminal):
         self.name = name
-        self.address = address
-        self.age = age
-        self.country = country
+        self.courtName = courtName
+        self.courtLocation = courtLocation
+        self.casesFought = casesFought
         self.criminal = criminal
 
     def __repr__(self):

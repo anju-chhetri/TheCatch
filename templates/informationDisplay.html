@@ -21,13 +21,18 @@
    <h1>{{criminalNameList[0].name}}</h1>
    <h3>Personal Profile</h3>
   <!-- Image***********>-->
+   <img src={{criminalNameList[0].fileLocation}} alt={{criminalNameList[0].name}} width="500" height="333"/>
+
      <div class="listFlex">
       <div>
          <ul>
             <li>Criminal ID: {{criminalNameList[0].id}}</li>
             <li>Address: {{criminalNameList[0].address}}</li>
             <li>Age: {{criminalNameList[0].age}}</li>
-         </ul>
+            <li>Nationality: {{criminalNameList[0].nationality}}</li>
+            <li>Years in Jail: {{criminalNameList[0].years}}</li>
+            <li>Jail Name: {{criminalNameList[0].jail}}</li>
+            </ul>
       </div>
     </div>
 
@@ -57,7 +62,6 @@
          <ul>
             <li>Crime ID: {{crime.id}}</li>
             <li>Crime Name: {{crime.name}}</li>
-
             <li>Crime Location: {{crime.crime_location}}</li>
          </ul>
       </div>
@@ -126,10 +130,10 @@
       <div>
          <ul>
             <li>ID: {{judges.id}}</li>
-            <li>Name: {{judges.name}}</li>
-            <li>Age: {{judges.age}}</li>
-            <li>Address: {{judges.address}}</li>
-            <li>Country of Judgement: {{judges.country}}</li>
+            <li>Judge Name: {{judges.name}}</li>
+            <li>Court Name: {{judges.courtName}}</li>
+            <li>Court Address: {{judges.courtLocation}}</li>
+            <li>Cases Fought: {{judges.casesFought}}</li>
 
          </ul>
       </div>

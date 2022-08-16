@@ -6,6 +6,7 @@ from flask_sqlalchemy  import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.form import RegistrationForm, LoginForm
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.sql import func
 
 #For video stream:
 import cv2
@@ -40,10 +41,99 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
+
+#---------------------------------____Criminal DATABASE
+
+class Criminal(db.Model):
+    __bind_key__ = 'CriminalDataBase'
+   # __tablename__ = 'criminals'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable = False)
+    address = db.Column(db.String(80), nullable = False)
+    age = db.Column(db.Integer, nullable = False)
+    nationality = db.Column(db.String(80), nullable = False)
+    years = db.Column(db.Integer, nullable = False)
+    jail = db.Column(db.String(80), nullable = False)
+    fileLocation = db.Column(db.String(80), nullable = False) #-----------------_For Image
+    created_at = db.Column(db.DateTime(timezone=True), server_default=func.now()) #-------------------_Added
+
+    crimes = db.relationship("Crime", backref="criminal")
+    victim = db.relationship("Victim", backref="criminal")
+    judge= db.relationship("Judge", backref = "criminal")
+
+    def __init__(self, name, address, age, nationality, years, jail, fileLocation):
+        self.name = name
+        self.address = address
+        self.age = age
+        self.nationality = nationality
+        self.years = years
+        self.jail = jail
+        self.fileLocation = fileLocation
+    def __repr__(self):
+        return f"<Criminal {self.name}>"
+
+class Crime(db.Model):
+    __bind_key__ = 'CriminalDataBase'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    crime_location = db.Column(db.String(80))
+    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
+
+    def __init__(self, name , crime_location, criminal):
+        self.name = name
+        self.crime_location = crime_location
+        self.criminal = criminal
+
+    def __repr__(self):
+        return f"<Crime {self.name}>"
+
+class Victim(db.Model):
+    __bind_key__ = 'CriminalDataBase'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable = False)
+    address = db.Column(db.String(80), nullable = False)
+    age = db.Column(db.Integer, nullable = False)
+    nationality = db.Column(db.String(80), nullable = True)
+    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
+
+    def __init__(self, name, address, age, nationality, criminal ):
+        self.name = name
+        self.address = address
+        self.age = age
+        self.nationality = nationality
+        self.criminal = criminal
+
+    def __repr__(self):
+        return f"<Victim {self.name}>"
+
+class Judge(db.Model):
+    __bind_key__ = 'CriminalDataBase'
+
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable = False)
+    courtName = db.Column(db.String(80), nullable = False)
+    courtLocation = db.Column(db.String(80), nullable = True)
+    casesFought = db.Column(db.Integer, nullable = True)
+    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
+
+    def __init__(self, name, courtName, courtLocation , casesFought, criminal):
+        self.name = name
+        self.courtName = courtName
+        self.courtLocation = courtLocation
+        self.casesFought = casesFought
+        self.criminal = criminal
+
+    def __repr__(self):
+        return f"<Judge {self.name}>"
+
+
 #------------------------------------------>Criminal Information display
 
 @app.route("/informationDisplay", methods = ['GET', 'POST'])
-@login_required
+#@login_required
 def informationDisplay():
     nameSubmitted = request.args.get('name')
     criminalNameList = Criminal.query.filter_by(name = nameSubmitted).all()
@@ -73,20 +163,20 @@ def informationDisplay():
 
 
 #-------------------------------------------------------------------------------->Home
+#@login_required
+
 @app.route("/home", methods = ['GET', 'POST'])
-@login_required
 def home():
 
     ##For search by name---------------------->
     if request.method == "POST":
         if request.form.get("submitName"):
             nameSubmitted = request.form.get("search")
+
             return redirect(url_for("informationDisplay", name = nameSubmitted))
 
-        if request.form.get("Logout"):
-            return(redirect(url_for("logout")))
 
-    #For search by Image
+    #For search by Image------------------------>
 
     form = VideoStream()
     if form.validate_on_submit():
@@ -101,12 +191,10 @@ def home():
 
 
 
-
-
-
 #--------------------------------------------------------------->Login and Registration Part
 
 class User(UserMixin, db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), unique=True)
     email = db.Column(db.String(50), unique=True)
@@ -151,6 +239,12 @@ def register():
         #return '<h1>' + form.username.data + ' ' + form.email.data + ' ' + form.password.data + '</h1>'
     return render_template('registration.html', form=form)
 
+#------------------------------------------> Logout Part
+@app.route('/logout')
+#@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
 
 
 #-------------------------Video Stream
@@ -176,7 +270,7 @@ def cam_frame():
 
 
 @app.route("/video", methods = ['POST','GET'])
-@login_required
+#@login_required
 def video():
     if request.method == "POST":
         if request.form.get("Return"):
@@ -200,15 +294,11 @@ def video():
             cv2.destroyAllWindows()
             detect = ImageRecog(newDirName+"/person.jpeg")
             (nameCriminal , conf) = detect.detection()
-
-            if nameCriminal == "Kailash Pantha":
-                return(redirect(url_for("informationDisplay", name = "Hella"))) #------------------------------------------------------------------------>Need to change
-
             if conf==0:
                 print("Nothing detected in Image.")
                 return(redirect(url_for("informationDisplay", name = nameCriminal)))
             else:
-                print(f"RESULT ------------------------> {nameCriminal} conf: {conf}")
+                return(redirect(url_for("informationDisplay", name = nameCriminal)))
             return redirect(url_for("home"))
 
     return render_template('video.html')
@@ -220,94 +310,7 @@ def videoFeed():
     return Response(cam_frame(),mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
-#------------------------------------------> Logout Part
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
 
-#---------------------------------____Criminal DATABASE
-
-class Criminal(db.Model):
-   # __tablename__ = 'criminals'
-    __bind_key__ = 'CriminalDataBase'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable = False)
-    address = db.Column(db.String(80), nullable = False)
-    age = db.Column(db.Integer(), nullable = False)
-    nationality = db.Column(db.String(80), nullable = False)
-    years = db.Column(db.String(80), nullable = False)
-
-    crimes = db.relationship("Crime", backref="criminal")
-    victim = db.relationship("Victim", backref="criminal")
-    judge= db.relationship("Judge", backref = "criminal")
-
-    def __init__(self, name, address, age, nationality, years):
-        self.name = name
-        self.address = address
-        self.age = age
-        self.nationality = nationality
-        self.years = years
-    def __repr__(self):
-        return f"<Criminal {self.name}>"
-
-class Crime(db.Model):
-    __bind_key__ = 'CriminalDataBase'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    #date_of_crime = db.Column(db.Date)
-    crime_location = db.Column(db.String)
-    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
-
-    def __init__(self, name , crime_location, criminal):
-        self.name = name
-        self.crime_location = crime_location
-        self.criminal = criminal
-
-    def __repr__(self):
-        return f"<Crime {self.name}>"
-
-class Victim(db.Model):
-    __bind_key__ = 'CriminalDataBase'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable = False)
-    address = db.Column(db.String(80), nullable = False)
-    age = db.Column(db.Integer(), nullable = False)
-    nationality = db.Column(db.String(80), nullable = True)
-    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
-
-    def __init__(self, name, address, age, nationality, criminal ):
-        self.name = name
-        self.address = address
-        self.age = age
-        self.nationality = nationality
-        self.criminal = criminal
-
-    def __repr__(self):
-        return f"<Victim {self.name}>"
-
-class Judge(db.Model):
-    __bind_key__ = 'CriminalDataBase'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable = False)
-    address = db.Column(db.String(80), nullable = False)
-    country = db.Column(db.String(80), nullable = False)
-    age = db.Column(db.Integer(), nullable = False)
-    criminal_id = db.Column(db.Integer, db.ForeignKey('criminal.id'), nullable = False)
-
-    def __init__(self, name, address, age, country, criminal):
-        self.name = name
-        self.address = address
-        self.age = age
-        self.country = country
-        self.criminal = criminal
-
-    def __repr__(self):
-        return f"<Judge {self.name}>"
 
 
 
