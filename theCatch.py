@@ -132,6 +132,7 @@ class Judge(db.Model):
 #------------------------------------------>Display All Record
 
 @app.route("/allrecord", methods = ['GET', 'POST'])
+@login_required
 def allrecord():
     if request.method == "POST":
         if request.form.get("Return"):
@@ -141,7 +142,7 @@ def allrecord():
 #------------------------------------------>Criminal Information display
 
 @app.route("/informationDisplay", methods = ['GET', 'POST'])
-#@login_required
+@login_required
 def informationDisplay():
     nameSubmitted = request.args.get('name')
     criminalNameList = Criminal.query.filter_by(name = nameSubmitted).all()
@@ -171,9 +172,9 @@ def informationDisplay():
 
 
 #-------------------------------------------------------------------------------->Home
-#@login_required
 
 @app.route("/home", methods = ['GET', 'POST'])
+@login_required
 def home():
 
     ##For search by name---------------------->
@@ -239,6 +240,7 @@ def register():
             new_user = User(username=form.username.data, email=form.email.data, password=hashed_password)
             db.session.add(new_user)
             db.session.commit()
+            flash('Your account has been successfully created.', 'success')
             return redirect(url_for('login'))
 
         except IntegrityError:
@@ -249,9 +251,18 @@ def register():
 
 #------------------------------------------> Logout Part
 @app.route('/logout')
-#@login_required
+@login_required
 def logout():
     logout_user()
+    return redirect(url_for('login'))
+
+#-------------------------M--------------------->Delete
+@app.route("/delete")
+def delete():
+    flash('Your account has been successfully deleted. Hope to see you again.', 'success')
+    user = current_user.id
+    User.query.filter(User.id == user).delete()
+    db.session.commit()
     return redirect(url_for('login'))
 
 
@@ -278,7 +289,7 @@ def cam_frame():
 
 
 @app.route("/video", methods = ['POST','GET'])
-#@login_required
+@login_required
 def video():
     if request.method == "POST":
         if request.form.get("Return"):

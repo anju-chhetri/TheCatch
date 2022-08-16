@@ -8,12 +8,33 @@
 <!--
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">-->
 
+
+<!--Message Flash for sucessfull account creation.-->
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+	<ul>
+	{% for message in messages %}
+	  <li>{{ message }}</li>
+	{% endfor %}
+	</ul>
+  {% endif %}
+{% endwith %}
+
 </head>
  <div class="topnav">
   <a class="active" href="#home">Home</a>
   <a href="{{url_for('allrecord')}}">All Record</a>
   <a href="#about">About</a>
   <a href="{{url_for('logout')}}">Log out</a>
+  <div class="dropdown">
+    <button class="dropbtn">Settings
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-content">
+      <a href="{{url_for('delete')}}">Delete account</a>
+    </div>
+  </div>
 
 </div>
 

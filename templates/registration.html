@@ -7,6 +7,16 @@
                 <div class = "form-group">
 
 
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+	<ul>
+	{% for message in messages %}
+	  <li>{{ message }}</li>
+	{% endfor %}
+	</ul>
+  {% endif %}
+{% endwith %}
+
                     {{form.username.label(class = "form-control-label")}}
 
                         {% if form.username.errors %}
