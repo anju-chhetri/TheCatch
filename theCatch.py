@@ -191,8 +191,6 @@ def home():
     if form.validate_on_submit():
         global IpLink
         IpLink = form.link.data
-        print(IpLink)
-        print(IpLink)
         return redirect(url_for('video'))
 
 

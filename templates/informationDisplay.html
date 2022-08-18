@@ -21,7 +21,7 @@
    <h1>{{criminalNameList[0].name}}</h1>
    <h3>Personal Profile</h3>
   <!-- Image***********>-->
-   <img src={{criminalNameList[0].fileLocation}} alt={{criminalNameList[0].name}} width="500" height="333"/>
+   <img src={{criminalNameList[0].fileLocation}} alt={{criminalNameList[0].name}} width="500" height="500"/>
 
      <div class="listFlex">
       <div>
@@ -32,6 +32,8 @@
             <li>Nationality: {{criminalNameList[0].nationality}}</li>
             <li>Years in Jail: {{criminalNameList[0].years}}</li>
             <li>Jail Name: {{criminalNameList[0].jail}}</li>
+            <li>Date of Record: {{criminalNameList[0].created_at}}</li>
+
             </ul>
       </div>
     </div>

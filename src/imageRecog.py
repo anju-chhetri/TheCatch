@@ -14,7 +14,6 @@ class ImageRecog():
         img = cv2.resize(img, (416, 416))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         result = model(img, size = 416)
-        print(result)
         className = result.pandas().xyxy[0]
         confDummy = 0
         index = 0
