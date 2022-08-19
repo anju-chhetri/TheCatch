@@ -1,6 +1,7 @@
 import torch
 import cv2
 import numpy as np
+import os
 
 class ImageRecog():
     imgPath = None
@@ -8,8 +9,8 @@ class ImageRecog():
         self.imgPath = imagepath
 
     def detection(self):
-        weight = "/home/anju_chhetri/Desktop/TheCatch/CriminalRecog.pt"
-        model = torch.hub.load("/home/anju_chhetri/Desktop/DBMS/Project/yolov5/", "custom",path = weight,  force_reload = True, source = "local")
+        weight = os.getcwd()  + '/CriminalRecog.pt'
+        model = torch.hub.load("/home/anju_chhetri/Desktop/DBMS/Project/yolov5/", "custom",path = weight,  force_reload = True, source = "local")  #------>add yolov5 path
         img = cv2.imread(self.imgPath)
         img = cv2.resize(img, (416, 416))
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

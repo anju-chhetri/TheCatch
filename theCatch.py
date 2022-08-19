@@ -11,7 +11,7 @@ from sqlalchemy.sql import func
 #For video stream:
 import cv2
 from src.videoStream import VideoStream
-from src.imageRecog import ImageRecog
+from imageRecog import ImageRecog
 import os
 
 
@@ -139,12 +139,22 @@ def allrecord():
             return redirect(url_for("home"))
     return render_template("allrecord.html", criminalNameList = Criminal.query.all())
 
+
+
+#---------------------------------------------->About Us
+@app.route("/aboutus", methods = ['GET', 'POST'])
+def aboutus():
+    if request.method == "POST":
+        if request.form.get("Return"):
+            return redirect(url_for("home"))
+    return render_template("about.html")
 #------------------------------------------>Criminal Information display
 
 @app.route("/informationDisplay", methods = ['GET', 'POST'])
 @login_required
 def informationDisplay():
     nameSubmitted = request.args.get('name')
+    #nameSubmitted = "Sandesh Sitaula"
     criminalNameList = Criminal.query.filter_by(name = nameSubmitted).all()
     if request.method == 'POST':
         if request.form.get("Return"):
